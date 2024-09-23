@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { MdUpload } from 'react-icons/md';  // 첨부 버튼 아이콘
-import { IoSend } from 'react-icons/io5';   // 업로드 버튼 아이콘
-import { AiOutlineClose } from 'react-icons/ai'; // 미리보기 제거 버튼
+import { MdUpload } from 'react-icons/md';
+import { IoSend } from 'react-icons/io5';
+import { AiOutlineClose } from 'react-icons/ai'; // 미리보기 제거
+import axios from 'axios';
+
 
 interface UploadedItem {
   file?: File;
   message?: string;
+  fileUrl?: string;
 }
 
 const FileUploader: React.FC = () => {
@@ -23,17 +26,31 @@ const FileUploader: React.FC = () => {
     setMessage(e.target.value);
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (file || message) {
-      const newItem: UploadedItem = {
-        file: file || undefined, 
-        message: message || undefined,
-      };
-      setUploadedItems([...uploadedItems, newItem]);
+      const formData = new FormData();
+      formData.append('file', file as Blob);
+      formData.append('message', message);
 
-      // Reset input fields after upload
-      setFile(null);
-      setMessage('');
+      try { // 서버 구성 후 api url 바꾸기
+        const response = await axios.post('http://localhost:3000/api/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        const newItem: UploadedItem = {
+          fileUrl: response.data.fileUrl,
+          message: response.data.message
+        };
+        setUploadedItems([...uploadedItems, newItem]);
+
+        // 입력 필드 초기화
+        setFile(null);
+        setMessage('');
+      } catch (error) {
+        console.error('Error uploading file', error);
+      }
     } else {
       alert('파일 또는 메시지를 입력하세요.');
     }
@@ -52,11 +69,18 @@ const FileUploader: React.FC = () => {
               <div className="uploaded-file">
                 <p>파일 이름: {item.file.name}</p>
                 <img
-                  src={URL.createObjectURL(item.file)}
+                  src={item.fileUrl}
                   alt={item.file.name}
                   className="uploaded-image"
                   style={{ maxWidth: '200px', maxHeight: '200px' }}
                 />
+                <a 
+                  href={item.fileUrl} 
+                  download={item.file.name} 
+                  className="download-link"
+                >
+                  파일 다운로드
+                </a>
               </div>
             )}
             {item.message && <p>{item.message}</p>}

@@ -219,3 +219,14 @@ html, body {
   cursor: pointer;
   padding: 0 10px;
 }
+
+.download-link {
+  color: #007bff;
+  text-decoration: none;
+  margin-top: 5px;
+  margin-left: 20px;
+}
+
+.download-link:hover {
+  text-decoration: underline;
+}
