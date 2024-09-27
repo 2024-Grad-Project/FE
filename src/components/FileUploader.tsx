@@ -4,7 +4,6 @@ import { IoSend } from 'react-icons/io5';
 import { AiOutlineClose } from 'react-icons/ai'; // 미리보기 제거
 import axios from 'axios';
 
-
 interface UploadedItem {
   file?: File;
   message?: string;
@@ -29,20 +28,21 @@ const FileUploader: React.FC = () => {
   const handleUpload = async () => {
     if (file || message) {
       const formData = new FormData();
-      formData.append('file', file as Blob);
+      if (file) formData.append('file', file); // file이 null일 경우 추가하지 않음
       formData.append('message', message);
 
-      try { // 서버 구성 후 api url 바꾸기
-        const response = await axios.post('http://localhost:3000/api/upload', formData, {
+      try {
+        const response = await axios.post('http://localhost:3000/api/users/upload', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+            'Content-Type': 'multipart/form-data',
+          },
         });
 
         const newItem: UploadedItem = {
           fileUrl: response.data.fileUrl,
-          message: response.data.message
+          message: response.data.message,
         };
+
         setUploadedItems([...uploadedItems, newItem]);
 
         // 입력 필드 초기화
@@ -65,18 +65,18 @@ const FileUploader: React.FC = () => {
       <div className="uploaded-items">
         {uploadedItems.map((item, index) => (
           <div key={index} className="uploaded-item">
-            {item.file && (
+            {item.fileUrl && (
               <div className="uploaded-file">
-                <p>파일 이름: {item.file.name}</p>
+                <p>파일 이름: {file?.name}</p>
                 <img
                   src={item.fileUrl}
-                  alt={item.file.name}
+                  alt="Uploaded"
                   className="uploaded-image"
                   style={{ maxWidth: '200px', maxHeight: '200px' }}
                 />
                 <a 
                   href={item.fileUrl} 
-                  download={item.file.name} 
+                  download={file?.name} 
                   className="download-link"
                 >
                   파일 다운로드
